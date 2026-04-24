@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>StickNinjaZ</title>
+  <link rel="icon" type="image/png" href="sticz.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      outline: none !important;
+      -webkit-tap-highlight-color: transparent !important;
+      -webkit-focus-ring-color: transparent !important;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      background: #1a1a2e;
+    }
+
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      cursor: pointer;
+    }
+
+    a, button, div, canvas, input {
+      outline: none !important;
+      -webkit-tap-highlight-color: rgba(0,0,0,0) !important;
+      -webkit-touch-callout: none;
+    }
+
+    a:focus, button:focus, div:focus, canvas:focus {
+      outline: none !important;
+      box-shadow: none !important;
+    }
+
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      width: 100%;
+      position: relative;
+    }
+
+    canvas {
+      display: block;
+      touch-action: none;
+      outline: none !important;
+      -webkit-tap-highlight-color: transparent !important;
+    }
+
+    /* Header bar */
+    #header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 52px;
+      background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
+      border-bottom: 2px solid #e63946;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      z-index: 100;
+    }
+
+    #game-title {
+      font-size: 1.1em;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    #game-title i { color: #e63946; font-size: 1.2em; }
+
+    #score {
+      font-size: 1.4em;
+      font-weight: 900;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.15s;
+    }
+
+    #score.pop { transform: scale(1.3); }
+    #score i { color: #e63946; font-size: 1em; }
+
+    #telegram-link {
+      color: #aaa;
+      font-size: 0.72em;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      letter-spacing: 0.5px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    #telegram-link i { color: #2AABEE; font-size: 1.1em; }
+
+    /* Perfect text */
+    #perfect {
+      position: fixed;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%) scale(0.8);
+      font-size: 1.2em;
+      font-weight: 900;
+      color: #e63946;
+      letter-spacing: 3px;
+      opacity: 0;
+      transition: opacity 0.25s, transform 0.25s;
+      text-transform: uppercase;
+      text-shadow: 0 0 18px #e63946cc, 0 0 40px #e6394660;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    #perfect.show {
+      opacity: 1;
+      transform: translateX(-50%) scale(1);
+    }
+
+    /* Combo display */
+    #combo {
+      position: fixed;
+      top: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.9em;
+      font-weight: 700;
+      color: #ffcc00;
+      letter-spacing: 2px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      text-shadow: 0 0 10px #ffcc0099;
+      z-index: 50;
+      pointer-events: none;
+    }
+
+    /* Restart screen */
+    #game-over-screen {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 10, 30, 0.92);
+      z-index: 200;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+
+    #game-over-screen.show { display: flex; }
+
+    #game-over-icon {
+      font-size: 3.5em;
+      color: #e63946;
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.12); }
+    }
+
+    #final-score-label {
+      color: #aaa;
+      font-size: 0.95em;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    #final-score {
+      font-size: 3.5em;
+      font-weight: 900;
+      color: #fff;
+      line-height: 1;
+      text-shadow: 0 0 20px #ffffff44;
+    }
+
+    #best-score-label {
+      color: #ffcc00;
+      font-size: 0.85em;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    #restart {
+      margin-top: 10px;
+      padding: 14px 40px;
+      border-radius: 50px;
+      color: white;
+      background: linear-gradient(135deg, #e63946, #c1121f);
+      border: none;
+      font-weight: 700;
+      font-size: 1.1em;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 24px #e6394660;
+      -webkit-tap-highlight-color: transparent;
+      outline: none;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    #restart:active {
+      transform: scale(0.96);
+      box-shadow: 0 2px 10px #e6394640;
+      outline: none;
+    }
+
+    /* ─── SHARINGAN LOADER ─────────────────────────── */
+    #splash {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at center, #0d0d1a 0%, #000000 100%);
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 30px;
+      transition: opacity 0.7s ease;
+    }
+
+    #splash.hide { opacity: 0; pointer-events: none; }
+
+    #splash-title {
+      font-size: 2.4em;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-shadow: 0 0 20px #e6394680;
+    }
+
+    #splash-title i { color: #e63946; filter: drop-shadow(0 0 8px #e63946); }
+
+    #splash-sub {
+      color: #888;
+      font-size: 0.78em;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      animation: flicker 1.5s ease-in-out infinite;
+    }
+
+    @keyframes flicker {
+      0%, 100% { opacity: 0.8; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ── SHARINGAN CSS LOADER ── */
+    .sharingon {
+      width: 6em;
+      height: 6em;
+      background-color: #e63946;
+      border: 6px solid #fff;
+      border-radius: 50%;
+      animation: rot 1s ease-in-out infinite;
+      position: relative;
+      box-shadow: 0 0 20px rgba(230, 57, 70, 0.5);
+    }
+
+    .ring {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 3.5em;
+      height: 3.5em;
+      border: 4px solid rgba(0, 0, 0, 0.3);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .to, .circle {
+      position: absolute;
+      width: 0.9em;
+      height: 0.9em;
+      background-color: #000;
+      border-radius: 50%;
+    }
+
+    .to:nth-child(1) {
+      top: -0.5em;
+      left: 50%;
+      transform: translate(-40%);
+    }
+
+    .to::before {
+      content: "";
+      position: absolute;
+      top: -0.5em;
+      right: -0.2em;
+      width: 1.1em;
+      height: 0.9em;
+      box-sizing: border-box;
+      border-left: 14px solid #000;
+      border-radius: 100% 0 0;
+    }
+
+    .to:nth-child(2) {
+      bottom: 0.5em;
+      left: -0.35em;
+      transform: rotate(-120deg);
+    }
+
+    .to:nth-child(3) {
+      bottom: 0.5em;
+      right: -0.35em;
+      transform: rotate(120deg);
+    }
+
+    .circle {
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 1.1em;
+      height: 1.1em;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+
+    @keyframes rot {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Hold hint at bottom */
+    #hold-hint {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.55);
+      font-size: 0.8em;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      pointer-events: none;
+      transition: opacity 1.5s;
+      z-index: 10;
+    }
+
+    #hold-hint i { color: #e63946; }
+
+    /* Floating score popup */
+    .score-popup {
+      position: fixed;
+      font-size: 1.4em;
+      font-weight: 900;
+      color: #fff;
+      text-shadow: 0 0 12px #ffffff88;
+      pointer-events: none;
+      z-index: 60;
+      animation: floatUp 0.9s ease-out forwards;
+    }
+
+    @keyframes floatUp {
+      0%   { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-60px) scale(1.3); }
+    }
+
+    /* Screen flash */
+    #flash {
+      position: fixed;
+      inset: 0;
+      background: rgba(230,57,70,0.18);
+      pointer-events: none;
+      opacity: 0;
+      z-index: 180;
+      transition: opacity 0.1s;
+    }
+    #flash.on { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<!-- Flash overlay -->
+<div id="flash"></div>
+
+<!-- Splash / Loader Screen -->
+<div id="splash">
+  <div id="splash-title">
+    <i class="fa-solid fa-user-ninja"></i>
+    StickNinjaZ
+  </div>
+
+  <!-- CSS Sharingan Loader -->
+  <div class="sharingon">
+    <div class="ring">
+      <div class="to"></div>
+      <div class="to"></div>
+      <div class="to"></div>
+      <div class="circle"></div>
+    </div>
+  </div>
+
+  <div id="splash-sub">Loading...</div>
+</div>
+
+<!-- Header -->
+<div id="header">
+  <div id="game-title">
+    <i class="fa-solid fa-user-ninja"></i>
+    StickNinjaZ
+  </div>
+  <div id="score"><i class="fa-solid fa-star"></i><span id="score-value">0</span></div>
+  <a id="telegram-link" href="https://t.me/zade4everbot" target="_blank">
+    <i class="fa-brands fa-telegram"></i>@zade4everbot
+  </a>
+</div>
+
+<!-- Perfect indicator -->
+<div id="perfect"><i class="fa-solid fa-bolt"></i> DOUBLE SCORE</div>
+
+<!-- Combo indicator -->
+<div id="combo"></div>
+
+<!-- Game canvas container -->
+<div class="container">
+  <canvas id="game"></canvas>
+</div>
+
+<!-- Hold hint -->
+<div id="hold-hint"><i class="fa-solid fa-hand-pointer"></i> Hold to stretch</div>
+
+<!-- Game Over Screen -->
+<div id="game-over-screen">
+  <div id="game-over-icon"><i class="fa-solid fa-skull"></i></div>
+  <div id="final-score-label">Your Score</div>
+  <div id="final-score">0</div>
+  <div id="best-score-label"></div>
+  <button id="restart">
+    <i class="fa-solid fa-rotate-right"></i> RESTART
+  </button>
+  <a href="https://t.me/zade4everbot" target="_blank"
+     style="color:#2AABEE;font-size:0.78em;text-decoration:none;display:flex;align-items:center;gap:5px;letter-spacing:1px;margin-top:4px;outline:none;-webkit-tap-highlight-color:transparent;">
+    <i class="fa-brands fa-telegram"></i> @zade4everbot
+  </a>
+</div>
+
+<script>
+// ─── Utility ───────────────────────────────────────────────
+Array.prototype.last = function () { return this[this.length - 1]; };
+Math.sinus = function (degree) { return Math.sin((degree / 180) * Math.PI); };
+
+// ─── Web Audio ─────────────────────────────────────────────
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx = null;
+
+function getAudio() {
+  if (!audioCtx) audioCtx = new AudioCtx();
+  return audioCtx;
+}
+
+function playTone(freq, type, duration, gainVal, fadeOut = true) {
+  try {
+    const ctx = getAudio();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    gain.gain.setValueAtTime(gainVal, ctx.currentTime);
+    if (fadeOut) gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + duration);
+  } catch(e) {}
+}
+
+function soundStretch() {
+  // Rising tone while holding
+  try {
+    const ctx = getAudio();
+    if (stretchOsc) return;
+    stretchOsc = ctx.createOscillator();
+    stretchGain = ctx.createGain();
+    stretchOsc.connect(stretchGain);
+    stretchGain.connect(ctx.destination);
+    stretchOsc.type = "sine";
+    stretchOsc.frequency.setValueAtTime(200, ctx.currentTime);
+    stretchGain.gain.setValueAtTime(0.08, ctx.currentTime);
+    stretchOsc.start(ctx.currentTime);
+  } catch(e) {}
+}
+
+function soundStretchUpdate(length) {
+  try {
+    if (stretchOsc) stretchOsc.frequency.setValueAtTime(200 + length * 2, getAudio().currentTime);
+  } catch(e) {}
+}
+
+function soundStretchStop() {
+  try {
+    if (stretchOsc) {
+      stretchGain.gain.setValueAtTime(stretchGain.gain.value, getAudio().currentTime);
+      stretchGain.gain.exponentialRampToValueAtTime(0.001, getAudio().currentTime + 0.15);
+      stretchOsc.stop(getAudio().currentTime + 0.15);
+      stretchOsc = null; stretchGain = null;
+    }
+  } catch(e) {}
+}
+
+function soundLand() {
+  // Thud
+  playTone(120, "sine", 0.18, 0.3);
+  setTimeout(() => playTone(200, "sine", 0.1, 0.15), 40);
+}
+
+function soundPerfect() {
+  // Triumphant chord
+  playTone(523, "sine", 0.3, 0.2);
+  setTimeout(() => playTone(659, "sine", 0.3, 0.2), 60);
+  setTimeout(() => playTone(784, "sine", 0.35, 0.22), 120);
+}
+
+function soundFall() {
+  // Whoosh down
+  try {
+    const ctx = getAudio();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(400, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 0.5);
+    gain.gain.setValueAtTime(0.18, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.5);
+  } catch(e) {}
+}
+
+function soundGameOver() {
+  playTone(180, "sawtooth", 0.4, 0.25);
+  setTimeout(() => playTone(120, "sawtooth", 0.6, 0.2), 300);
+}
+
+function soundScore() {
+  playTone(440, "square", 0.12, 0.1);
+}
+
+let stretchOsc = null, stretchGain = null;
+
+// ─── Splash screen dismiss ─────────────────────────────────
+window.addEventListener("load", () => {
+  setTimeout(() => {
+    const splash = document.getElementById("splash");
+    splash.classList.add("hide");
+    setTimeout(() => splash.style.display = "none", 800);
+  }, 2000);
+});
+
+// ─── Best Score ────────────────────────────────────────────
+let bestScore = parseInt(localStorage.getItem("stickninjaz_best") || "0");
+
+// ─── Game state ────────────────────────────────────────────
+let phase = "waiting";
+let lastTimestamp;
+let heroX, heroY, sceneOffset;
+let platforms = [], sticks = [], trees = [];
+let score = 0;
+let perfectCombo = 0;
+let falling = false;
+
+// ─── Config ────────────────────────────────────────────────
+const canvasWidth  = 375;
+const canvasHeight = 375;
+const platformHeight      = 100;
+const heroDistanceFromEdge = 10;
+const paddingX            = 100;
+const perfectAreaSize     = 10;
+const backgroundSpeedMultiplier = 0.2;
+
+const hill1BaseHeight = 100, hill1Amplitude = 10, hill1Stretch = 1;
+const hill2BaseHeight =  70, hill2Amplitude = 20, hill2Stretch = 0.5;
+
+const stretchingSpeed  = 4;
+const turningSpeed     = 4;
+const walkingSpeed     = 4;
+const transitioningSpeed = 2;
+const fallingSpeed     = 2;
+const heroWidth = 17, heroHeight = 30;
+
+// ─── Canvas ────────────────────────────────────────────────
+const canvas = document.getElementById("game");
+canvas.width  = window.innerWidth;
+canvas.height = window.innerHeight;
+const ctx = canvas.getContext("2d");
+
+// Enable HD rendering
+const dpr = window.devicePixelRatio || 1;
+canvas.width  = window.innerWidth  * dpr;
+canvas.height = window.innerHeight * dpr;
+canvas.style.width  = window.innerWidth  + "px";
+canvas.style.height = window.innerHeight + "px";
+ctx.scale(dpr, dpr);
+
+// ─── UI refs ───────────────────────────────────────────────
+const perfectElement    = document.getElementById("perfect");
+const comboEl           = document.getElementById("combo");
+const restartButton     = document.getElementById("restart");
+const scoreValueEl      = document.getElementById("score-value");
+const scoreEl           = document.getElementById("score");
+const gameOverScreen    = document.getElementById("game-over-screen");
+const finalScoreEl      = document.getElementById("final-score");
+const bestScoreLabel    = document.getElementById("best-score-label");
+const holdHint          = document.getElementById("hold-hint");
+const flashEl           = document.getElementById("flash");
+
+// ─── Init ──────────────────────────────────────────────────
+resetGame();
+
+function resetGame() {
+  phase = "waiting";
+  lastTimestamp = undefined;
+  sceneOffset = 0;
+  score = 0;
+  perfectCombo = 0;
+  falling = false;
+
+  perfectElement.classList.remove("show");
+  comboEl.style.opacity = 0;
+  gameOverScreen.classList.remove("show");
+  scoreValueEl.innerText = score;
+  holdHint.style.opacity = "1";
+
+  platforms = [{ x: 50, w: 50 }];
+  for (let i = 0; i < 4; i++) generatePlatform();
+
+  sticks = [{ x: platforms[0].x + platforms[0].w, length: 0, rotation: 0 }];
+
+  trees = [];
+  for (let i = 0; i < 10; i++) generateTree();
+
+  heroX = platforms[0].x + platforms[0].w - heroDistanceFromEdge;
+  heroY = 0;
+
+  draw();
+}
+
+function generateTree() {
+  const minGap = 30, maxGap = 150;
+  const last = trees[trees.length - 1];
+  const fx = last ? last.x : 0;
+  const x = fx + minGap + Math.floor(Math.random() * (maxGap - minGap));
+  const colors = ["#6D8821","#8FAC34","#98B333"];
+  trees.push({ x, color: colors[Math.floor(Math.random() * 3)] });
+}
+
+function generatePlatform() {
+  const minGap = 40, maxGap = 200, minW = 20, maxW = 100;
+  const last = platforms[platforms.length - 1];
+  const fx = last.x + last.w;
+  const x = fx + minGap + Math.floor(Math.random() * (maxGap - minGap));
+  const w = minW + Math.floor(Math.random() * (maxW - minW));
+  platforms.push({ x, w });
+}
+
+// ─── Score popup ───────────────────────────────────────────
+function spawnScorePopup(text, color = "#fff") {
+  const el = document.createElement("div");
+  el.className = "score-popup";
+  el.style.color = color;
+  el.style.left = (window.innerWidth / 2 - 20) + "px";
+  el.style.top  = "130px";
+  el.textContent = text;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 900);
+}
+
+// ─── Flash effect ──────────────────────────────────────────
+function triggerFlash() {
+  flashEl.classList.add("on");
+  setTimeout(() => flashEl.classList.remove("on"), 120);
+}
+
+// ─── Touch controls (Android) ──────────────────────────────
+canvas.addEventListener("touchstart", function(e) {
+  e.preventDefault();
+  if (phase === "waiting") {
+    lastTimestamp = undefined;
+    holdHint.style.opacity = "0";
+    phase = "stretching";
+    soundStretch();
+    window.requestAnimationFrame(animate);
+  }
+}, { passive: false });
+
+canvas.addEventListener("touchend", function(e) {
+  e.preventDefault();
+  if (phase === "stretching") {
+    phase = "turning";
+    soundStretchStop();
+  }
+}, { passive: false });
+
+window.addEventListener("mousedown", function() {
+  if (phase === "waiting") {
+    lastTimestamp = undefined;
+    holdHint.style.opacity = "0";
+    phase = "stretching";
+    soundStretch();
+    window.requestAnimationFrame(animate);
+  }
+});
+window.addEventListener("mouseup", function() {
+  if (phase === "stretching") {
+    phase = "turning";
+    soundStretchStop();
+  }
+});
+
+window.addEventListener("keydown", function(e) {
+  if (e.key === " ") { e.preventDefault(); resetGame(); }
+});
+
+window.addEventListener("resize", function() {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width  = window.innerWidth  * dpr;
+  canvas.height = window.innerHeight * dpr;
+  canvas.style.width  = window.innerWidth  + "px";
+  canvas.style.height = window.innerHeight + "px";
+  ctx.scale(dpr, dpr);
+  draw();
+});
+
+restartButton.addEventListener("click", function(e) {
+  e.preventDefault();
+  resetGame();
+});
+
+// ─── Main loop ─────────────────────────────────────────────
+window.requestAnimationFrame(animate);
+
+function animate(timestamp) {
+  if (!lastTimestamp) {
+    lastTimestamp = timestamp;
+    window.requestAnimationFrame(animate);
+    return;
+  }
+
+  switch (phase) {
+    case "waiting": return;
+
+    case "stretching":
+      sticks.last().length += (timestamp - lastTimestamp) / stretchingSpeed;
+      soundStretchUpdate(sticks.last().length);
+      break;
+
+    case "turning":
+      sticks.last().rotation += (timestamp - lastTimestamp) / turningSpeed;
+      if (sticks.last().rotation > 90) {
+        sticks.last().rotation = 90;
+        const [nextPlatform, perfectHit] = thePlatformTheStickHits();
+        if (nextPlatform) {
+          const points = perfectHit ? 2 : 1;
+          score += points;
+          scoreValueEl.innerText = score;
+
+          // Score pop animation
+          scoreEl.classList.add("pop");
+          setTimeout(() => scoreEl.classList.remove("pop"), 200);
+
+          soundLand();
+          soundScore();
+
+          if (perfectHit) {
+            perfectCombo++;
+            perfectElement.classList.add("show");
+            setTimeout(() => perfectElement.classList.remove("show"), 1000);
+            soundPerfect();
+            triggerFlash();
+            spawnScorePopup(perfectCombo > 1 ? `+2 ×${perfectCombo} COMBO!` : "+2 PERFECT!", "#ffcc00");
+            if (perfectCombo > 1) {
+              comboEl.textContent = `🔥 ${perfectCombo}x COMBO`;
+              comboEl.style.opacity = "1";
+              setTimeout(() => { comboEl.style.opacity = "0"; }, 1200);
+            }
+          } else {
+            perfectCombo = 0;
+            spawnScorePopup("+1");
+          }
+
+          generatePlatform();
+          generateTree();
+          generateTree();
+        } else {
+          perfectCombo = 0;
+          soundFall();
+        }
+        phase = "walking";
+      }
+      break;
+
+    case "walking":
+      heroX += (timestamp - lastTimestamp) / walkingSpeed;
+      const [nextPlatform] = thePlatformTheStickHits();
+      if (nextPlatform) {
+        const maxX = nextPlatform.x + nextPlatform.w - heroDistanceFromEdge;
+        if (heroX > maxX) { heroX = maxX; phase = "transitioning"; }
+      } else {
+        const maxX = sticks.last().x + sticks.last().length + heroWidth;
+        if (heroX > maxX) { heroX = maxX; phase = "falling"; }
+      }
+      break;
+
+    case "transitioning":
+      sceneOffset += (timestamp - lastTimestamp) / transitioningSpeed;
+      const [np] = thePlatformTheStickHits();
+      if (sceneOffset > np.x + np.w - paddingX) {
+        sticks.push({ x: np.x + np.w, length: 0, rotation: 0 });
+        phase = "waiting";
+        holdHint.style.opacity = "0.7";
+      }
+      break;
+
+    case "falling":
+      if (sticks.last().rotation < 180)
+        sticks.last().rotation += (timestamp - lastTimestamp) / turningSpeed;
+      heroY += (timestamp - lastTimestamp) / fallingSpeed;
+      const maxHeroY = platformHeight + 100 + (window.innerHeight - canvasHeight) / 2;
+      if (heroY > maxHeroY) {
+        if (score > bestScore) {
+          bestScore = score;
+          localStorage.setItem("stickninjaz_best", bestScore);
+        }
+        finalScoreEl.innerText = score;
+        bestScoreLabel.textContent = score >= bestScore ? `🏆 NEW BEST: ${bestScore}` : `Best: ${bestScore}`;
+        soundGameOver();
+        gameOverScreen.classList.add("show");
+        return;
+      }
+      break;
+
+    default: throw Error("Wrong phase");
+  }
+
+  draw();
+  window.requestAnimationFrame(animate);
+  lastTimestamp = timestamp;
+}
+
+// ─── Platform detection ────────────────────────────────────
+function thePlatformTheStickHits() {
+  if (sticks.last().rotation !== 90) throw Error(`Stick is ${sticks.last().rotation}°`);
+  const farX = sticks.last().x + sticks.last().length;
+  const hit = platforms.find(p => p.x < farX && farX < p.x + p.w);
+  if (hit &&
+      hit.x + hit.w / 2 - perfectAreaSize / 2 < farX &&
+      farX < hit.x + hit.w / 2 + perfectAreaSize / 2)
+    return [hit, true];
+  return [hit, false];
+}
+
+// ─── Drawing ───────────────────────────────────────────────
+function draw() {
+  ctx.save();
+  ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+  drawBackground();
+  ctx.translate(
+    (window.innerWidth  - canvasWidth)  / 2 - sceneOffset,
+    (window.innerHeight - canvasHeight) / 2
+  );
+  drawPlatforms();
+  drawHero();
+  drawSticks();
+  ctx.restore();
+}
+
+function drawBackground() {
+  const g = ctx.createLinearGradient(0, 0, 0, window.innerHeight);
+  g.addColorStop(0, "#BBD691");
+  g.addColorStop(1, "#FEF1E1");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+  drawHill(hill1BaseHeight, hill1Amplitude, hill1Stretch, "#95C629");
+  drawHill(hill2BaseHeight, hill2Amplitude, hill2Stretch, "#659F1C");
+  trees.forEach(t => drawTree(t.x, t.color));
+}
+
+function drawHill(baseH, amp, stretch, color) {
+  ctx.beginPath();
+  ctx.moveTo(0, window.innerHeight);
+  ctx.lineTo(0, getHillY(0, baseH, amp, stretch));
+  for (let i = 0; i < window.innerWidth; i++)
+    ctx.lineTo(i, getHillY(i, baseH, amp, stretch));
+  ctx.lineTo(window.innerWidth, window.innerHeight);
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+
+function drawTree(x, color) {
+  ctx.save();
+  ctx.translate(
+    (-sceneOffset * backgroundSpeedMultiplier + x) * hill1Stretch,
+    getTreeY(x, hill1BaseHeight, hill1Amplitude)
+  );
+  ctx.fillStyle = "#7D833C";
+  ctx.fillRect(-1, -5, 2, 5);
+  ctx.beginPath();
+  ctx.moveTo(-5, -5);
+  ctx.lineTo(0, -30);
+  ctx.lineTo(5, -5);
+  ctx.fillStyle = color;
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawPlatforms() {
+  platforms.forEach(({ x, w }) => {
+    // Platform shadow
+    ctx.fillStyle = "rgba(0,0,0,0.18)";
+    ctx.fillRect(x + 3, canvasHeight - platformHeight + 4, w, platformHeight + (window.innerHeight - canvasHeight) / 2);
+
+    // Platform body with gradient
+    const platGrad = ctx.createLinearGradient(x, canvasHeight - platformHeight, x, canvasHeight);
+    platGrad.addColorStop(0, "#2a2a4a");
+    platGrad.addColorStop(1, "#0d0d1e");
+    ctx.fillStyle = platGrad;
+    ctx.fillRect(x, canvasHeight - platformHeight, w, platformHeight + (window.innerHeight - canvasHeight) / 2);
+
+    // Top edge highlight
+    ctx.fillStyle = "#3a3a5a";
+    ctx.fillRect(x, canvasHeight - platformHeight, w, 2);
+
+    if (sticks.last().x < x) {
+      // Perfect zone - glowing red
+      const perfGrad = ctx.createLinearGradient(0, canvasHeight - platformHeight, 0, canvasHeight - platformHeight + perfectAreaSize);
+      perfGrad.addColorStop(0, "#ff6070");
+      perfGrad.addColorStop(1, "#e63946");
+      ctx.fillStyle = perfGrad;
+      ctx.fillRect(x + w / 2 - perfectAreaSize / 2, canvasHeight - platformHeight, perfectAreaSize, perfectAreaSize);
+
+      // Glow on perfect zone
+      ctx.shadowColor = "#e63946";
+      ctx.shadowBlur = 8;
+      ctx.fillRect(x + w / 2 - perfectAreaSize / 2, canvasHeight - platformHeight, perfectAreaSize, 2);
+      ctx.shadowBlur = 0;
+    }
+  });
+}
+
+function drawHero() {
+  ctx.save();
+  ctx.fillStyle = "#1a1a2e";
+  ctx.translate(heroX - heroWidth / 2, heroY + canvasHeight - platformHeight - heroHeight / 2);
+
+  // Body shadow
+  ctx.shadowColor = "rgba(0,0,0,0.4)";
+  ctx.shadowBlur = 6;
+  ctx.shadowOffsetX = 2;
+  ctx.shadowOffsetY = 2;
+
+  drawRoundedRect(-heroWidth / 2, -heroHeight / 2, heroWidth, heroHeight - 4, 5);
+
+  ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
+
+  const ld = 5;
+  ctx.beginPath(); ctx.arc(ld,  11.5, 3, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(-ld, 11.5, 3, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.fillStyle = "white"; ctx.arc(5, -7, 3, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#e63946";
+  ctx.fillRect(-heroWidth / 2 - 1, -12, heroWidth + 2, 4.5);
+  ctx.beginPath(); ctx.moveTo(-9,-14.5); ctx.lineTo(-17,-18.5); ctx.lineTo(-14,-8.5); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-10,-10.5); ctx.lineTo(-15,-3.5); ctx.lineTo(-5,-7); ctx.fill();
+  ctx.restore();
+}
+
+function drawRoundedRect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x, y + r);
+  ctx.lineTo(x, y + h - r);
+  ctx.arcTo(x, y + h, x + r, y + h, r);
+  ctx.lineTo(x + w - r, y + h);
+  ctx.arcTo(x + w, y + h, x + w, y + h - r, r);
+  ctx.lineTo(x + w, y + r);
+  ctx.arcTo(x + w, y, x + w - r, y, r);
+  ctx.lineTo(x + r, y);
+  ctx.arcTo(x, y, x, y + r, r);
+  ctx.fill();
+}
+
+function drawSticks() {
+  sticks.forEach(stick => {
+    ctx.save();
+    ctx.translate(stick.x, canvasHeight - platformHeight);
+    ctx.rotate((Math.PI / 180) * stick.rotation);
+    ctx.beginPath();
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = "#1a1a2e";
+    ctx.shadowColor = "rgba(0,0,0,0.3)";
+    ctx.shadowBlur = 3;
+    ctx.moveTo(0, 0);
+    ctx.lineTo(0, -stick.length);
+    ctx.stroke();
+    ctx.restore();
+  });
+}
+
+function getHillY(wx, baseH, amp, stretch) {
+  return Math.sinus((sceneOffset * backgroundSpeedMultiplier + wx) * stretch) * amp + (window.innerHeight - baseH);
+}
+
+function getTreeY(x, baseH, amp) {
+  return Math.sinus(x) * amp + (window.innerHeight - baseH);
+}
+</script>
+</body>
+</html>
